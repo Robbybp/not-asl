@@ -30,41 +30,41 @@ int test(int narg, char ** argv){
   struct Node expr1_args[4] = {xnode, ynode, znode, pnode};
   struct OperatorNode expr1 = {SUM, 4, expr1_args};
   union NodeData e1data = {.expr = &expr1};
-  struct Node e1node = {EXPR_NODE, e1data};
+  struct Node e1node = {OP_NODE, e1data};
 
   struct Node expr2_args[2] = {xnode, znode};
   struct OperatorNode expr2 = {PRODUCT, 2, expr2_args};
   union NodeData e2data = {.expr = &expr2};
-  struct Node e2node = {EXPR_NODE, e2data};
+  struct Node e2node = {OP_NODE, e2data};
 
   struct Node expr3_args[2] = {e1node, e2node};
   struct OperatorNode expr3 = {SUBTRACTION, 2, expr3_args};
   union NodeData e3data = {.expr = &expr3};
-  struct Node e3node = {EXPR_NODE, e3data};
+  struct Node e3node = {OP_NODE, e3data};
 
   struct Node expr4_args[2] = {pnode, e3node};
   struct OperatorNode expr4 = {DIVISION, 2, expr4_args};
   union NodeData e4data = {.expr = &expr4};
-  struct Node e4node = {EXPR_NODE, e4data};
+  struct Node e4node = {OP_NODE, e4data};
 
   union NodeData expnode_data = {.value = 10.5};
   struct Node expnode = {CONST_NODE, expnode_data};
   struct Node expr5_args[2] = {znode, expnode};
   struct OperatorNode expr5 = {POWER, 2, expr5_args};
   union NodeData e5data = {.expr = &expr5};
-  struct Node e5node = {EXPR_NODE, e5data};
+  struct Node e5node = {OP_NODE, e5data};
 
   // TODO: Verify that this e1node is at a different memory location
   // than other "instances" of e1node.
   struct Node expr6_args[2] = {e2node, e1node};
   struct OperatorNode expr6 = {POWER, 2, expr6_args};
   union NodeData e6data = {.expr = &expr6};
-  struct Node e6node = {EXPR_NODE, e6data};
+  struct Node e6node = {OP_NODE, e6data};
 
   struct Node expr7_args[2] = {e5node, e6node};
   struct OperatorNode expr7 = {DIVISION, 2, expr7_args};
   union NodeData e7data = {.expr = &expr7};
-  struct Node e7node = {EXPR_NODE, e7data};
+  struct Node e7node = {OP_NODE, e7data};
 
   printf("Testing evaluation functionality\n");
 

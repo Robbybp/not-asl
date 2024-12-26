@@ -42,7 +42,7 @@ int differentiate(struct Node expr, struct VarListNode * wrt, double * values, i
       return _differentiate_constant(expr, wrt, values, nvar);
     case VAR_NODE:
       return _differentiate_variable(expr, wrt, values, nvar);
-    case EXPR_NODE:
+    case OP_NODE:
       return _differentiate_expression(expr, wrt, values, nvar);
   }
 }
@@ -94,7 +94,7 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
 
 int _differentiate_sum(struct Node * args, int nargs, double * deriv);
 int _differentiate_sum(struct Node * args, int nargs, double * deriv){
-  // NOTE: Expressions are not evaluated here. If I add side-effects to evaluate,
+  // NOTE: OperatorNodes are not evaluated here. If I add side-effects to evaluate,
   // need to make sure this happens in this case.
   for (int j=0; j<nargs; j++){
     deriv[j] = 1.0;

@@ -319,6 +319,6 @@ struct Node _read_nl_expression(FILE * fp, char * line, struct Variable * variab
   expr->args = args;
 
   union NodeData nodedata = {.expr=expr};
-  struct Node node = {EXPR_NODE, nodedata};
+  struct Node node = {OP_NODE, nodedata};
   return node;
 }

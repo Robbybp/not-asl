@@ -86,11 +86,9 @@ int _expr_to_string(char * buffer, int bsize, struct OperatorNode expr);
 enum NodeType {
   CONST_NODE,
   VAR_NODE,
-  EXPR_NODE,
+  OP_NODE,
 };
 
-// This is kind of a misnomer. Really this is the "operator type"
-// and struct Node is the general expression data structure.
 struct OperatorNode{
   enum OperatorType op;
   int nargs;
@@ -107,13 +105,13 @@ union NodeData {
   // can be used in multiple locations.
   // This just enforces that the same variable and expression can be used in multiple
   // nodes. Then I further enforce that the same nodes can be used in multiple
-  // Expressions. But I probably want just a single node for each variable.
+  // OperatorNodes. But I probably want just a single node for each variable.
   //
   // Each leaf node multiplies the amount of memory needed for the variable/constant,
   // so I want to reduce the number of nodes I use.
   // I just need to make sure I operate on nodes, rather than variables (or constants).
   //
-  // Or I could use an actual array of Nodes in the Expression, and have each
+  // Or I could use an actual array of Nodes in the OperatorNode, and have each
   // node simply point to the variable...
   // With pointers to nodes, however, I can have "parameter nodes". It is unclear
   // whether I want this.
@@ -134,7 +132,7 @@ union NodeData {
 // It seems a little roundabout to have both a value and arguments.
 // Could I encode with an integer? Integer is the variable index,
 // which can be used to access the value. But what does an integer
-// refer to for the Expression?
+// refer to for the OperatorNode?
 struct Node {
   enum NodeType type;
   union NodeData data;
@@ -147,7 +145,7 @@ double evaluate(struct Node expr){
       return expr.data.value;
     case VAR_NODE:
       return expr.data.var->value;
-    case EXPR_NODE:
+    case OP_NODE:
       return OP_EVALUATOR[expr.data.expr->op](expr.data.expr->nargs, expr.data.expr->args);
   }
 }
@@ -229,7 +227,7 @@ int to_string(char * buffer, int bsize, struct Node expr){
       return snprintf(buffer, bsize, "%1.3f", expr.data.value);
     case VAR_NODE:
       return snprintf(buffer, bsize, "v%d", expr.data.var->index);
-    case EXPR_NODE:
+    case OP_NODE:
       return _expr_to_string(buffer, bsize, *expr.data.expr);
   }
 }
@@ -295,7 +293,7 @@ void free_expression(struct Node node){
     case VAR_NODE:
       // TODO: Option to free variable nodes
       return;
-    case EXPR_NODE:
+    case OP_NODE:
       return _free_expression(node.data.expr);
   }
 }

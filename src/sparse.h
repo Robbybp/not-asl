@@ -55,7 +55,7 @@ int identify_variables(
         return 1;
       }
     }
-    case EXPR_NODE:
+    case OP_NODE:
     {
       int varcount = 0;
       for (int i=0; i<expr.data.expr->nargs; i++){
