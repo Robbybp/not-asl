@@ -313,7 +313,7 @@ struct Node _read_nl_expression(FILE * fp, char * line, struct Variable * variab
   }
 
   // Heap-allocate this expression so we can access it outside of this function
-  struct Expression * expr = malloc(sizeof(struct Expression));
+  struct OperatorNode * expr = malloc(sizeof(struct OperatorNode));
   expr->op = optype;
   expr->nargs = nargs;
   expr->args = args;

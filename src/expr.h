@@ -2,7 +2,7 @@
 
 // Forward-declare structs for use in function prototypes
 struct Node;
-struct Expression;
+struct OperatorNode;
 
 const int N_OPERATORS = 12;
 enum OperatorType {
@@ -81,7 +81,7 @@ double (* OP_EVALUATOR[N_OPERATORS])(int, struct Node *) = {
 };
 
 int to_string(char * buffer, int bsize, struct Node expr);
-int _expr_to_string(char * buffer, int bsize, struct Expression expr);
+int _expr_to_string(char * buffer, int bsize, struct OperatorNode expr);
 
 enum NodeType {
   CONST_NODE,
@@ -91,7 +91,7 @@ enum NodeType {
 
 // This is kind of a misnomer. Really this is the "operator type"
 // and struct Node is the general expression data structure.
-struct Expression{
+struct OperatorNode{
   enum OperatorType op;
   int nargs;
   // Array of nodes. Each node contains a pointer to its underlying
@@ -122,7 +122,7 @@ union NodeData {
   // stored in a node. In which case they would want the node to point to the
   // variable.
   struct Variable *var;
-  struct Expression *expr;
+  struct OperatorNode *expr;
 };
 
 // How would a common "node" struct work?
@@ -234,7 +234,7 @@ int to_string(char * buffer, int bsize, struct Node expr){
   }
 }
 
-int _expr_to_string(char * buffer, int bsize, struct Expression expr){
+int _expr_to_string(char * buffer, int bsize, struct OperatorNode expr){
   int nargs = expr.nargs;
   struct Node * args = expr.args;
 
@@ -286,7 +286,7 @@ int _expr_to_string(char * buffer, int bsize, struct Expression expr){
 }
 
 void free_expression(struct Node node);
-void _free_expression(struct Expression * node);
+void _free_expression(struct OperatorNode * node);
 
 void free_expression(struct Node node){
   switch(node.type){
@@ -300,7 +300,7 @@ void free_expression(struct Node node){
   }
 }
 
-void _free_expression(struct Expression * expr){
+void _free_expression(struct OperatorNode * expr){
   for (int i=0; i < expr->nargs; i++){
     // Free all subexpressions, if necessary
     free_expression(expr->args[i]);
