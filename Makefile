@@ -1,15 +1,11 @@
 model.nl:
 	python model.py --model=unary
 
-test-parse: model.nl
+test-parse: model.nl src/test-parse.c
 	gcc -o test-parse src/test-parse.c
 	./test-parse model.nl
 
-test-diff: model.nl
-	gcc -o test-diff src/test-diff.c
-	./test-diff model.nl
-
-test: model.nl
+test-diff: model.nl src/test-diff.c
 	gcc -o test-diff src/test-diff.c
 	./test-diff model.nl
 
