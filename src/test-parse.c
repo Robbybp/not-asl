@@ -288,6 +288,14 @@ int main(int narg, char ** argv){
 
   print_csrmatrix(jacobian);
 
+  // Converting varlists[0] into an array
+  struct Variable * vararray = malloc(sizeof(struct Variable) * nvar_in_con[0]);
+  struct VarListNode * tempnode = varlists[0];
+  for (int i=0; i<nvar_in_con[0]; i++){
+    vararray[i] = *(tempnode->variable);
+    tempnode = tempnode->next;
+  }
+
   // Free linked lists of variables
   for (int i=0; i<ncon; i++){
     free_varlist(&varlists[i]);
