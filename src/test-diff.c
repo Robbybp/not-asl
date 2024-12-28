@@ -23,32 +23,24 @@ int main(int narg, char ** argv){
 
   struct Variable variables[3] = {x, y, z};
 
-  int ret;
-  double values[nvar] = {0.0, 0.0, 0.0};
-  struct VarListNode * wrt = NULL;
+  struct CSRMatrix deriv;
 
-  // Recall: A `Node` contains the node type and its data.
-  struct Node expr = {CONST_NODE, 5.4};
-  ret = differentiate(expr, wrt, values, nvar);
-  to_string(buffer, bsize, expr);
-  printf("Expression: %s\n", buffer);
-  printf("Derivative: [ ");
-  for (int i = 0; i < nvar; i++){printf("%f, ", values[i]);}
-  printf("]\n\n");
+  struct Node expr1 = {.type=CONST_NODE, .data=5.4};
+  deriv = differentiate_expression(expr1, nvar);
+  print_csrmatrix(deriv);
+  free_csrmatrix(deriv);
 
   struct Node expr2 = {VAR_NODE, xdata};
-  struct VarListNode wrt2 = {NULL, &z};
-  struct VarListNode wrt3 = {&wrt2, &y};
-  struct VarListNode wrt4 = {&wrt3, &x};
-  // TODO: Combine identify_variables and differentiate into a single function?
-  // What is the output? A CSRMatrix?
+  deriv = differentiate_expression(expr2, nvar);
+  print_csrmatrix(deriv);
+  free_csrmatrix(deriv);
 
-  ret = differentiate(expr2, &wrt4, values, nvar);
+  expr2.data = zdata;
+  deriv = differentiate_expression(expr2, nvar);
   to_string(buffer, bsize, expr2);
-  printf("Expression: %s\n", buffer);
-  printf("Derivative: [ ");
-  for (int i = 0; i < nvar; i++){printf("%f, ", values[i]);}
-  printf("]\n\n");
+  printf("\nExpression: %s", buffer);
+  print_csrmatrix(deriv);
+  free_csrmatrix(deriv);
 
   return 0;
 }
