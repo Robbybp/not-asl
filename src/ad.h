@@ -1,3 +1,5 @@
+#include <assert.h>
+
 /*
  * Differentiate an expression with respect to provided variables at the current
  * values of all variables. Derivative values are stored in a provided array.
@@ -24,10 +26,12 @@
  *
  */
 // TODO: enum for forward/backward mode, or separate functions
+// TODO: The linked list data structure is convenient for construction,
+// but not that easy to work with. Should I add a wrapper function that
+// returns an array?
 int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 
-// Can I make this work?
-//struct CSRMatrix differentiate_expression(struct Node expr);
+struct CSRMatrix differentiate_expression(struct Node expr, int nvar);
 
 // Need intermediate storage
 // Can I do this with O(1) storage?
@@ -56,17 +60,16 @@ int _differentiate_constant(struct Node expr, struct VarListNode * wrt, double *
 
 int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   struct VarListNode * node = wrt;
-  int j = 0;
   while (node){
-    if (expr.data.var->index == node->variable->index){
-      if (values[j] == 0){
-        values[j] = 1.0;
+    int idx = expr.data.var->index;
+    if (idx == node->variable->index){
+      if (values[idx] == 0){
+        values[idx] = 1.0;
       } else {
-        printf("ERROR: Derivative WRT var %d already has a value", j);
+        printf("ERROR: Derivative WRT var %d already has a value", idx);
         exit(-1);
       }
     }
-    j += 1;
     node = node->next;
   }
   return nvar;
@@ -124,4 +127,56 @@ int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
   deriv[0] = 1.0;
   deriv[1] = -1.0;
   return 0;
+}
+
+/*
+ * Differentiate an expression and return a single CSR matrix
+ * (here, a sparse vector).
+ */
+struct CSRMatrix differentiate_expression(struct Node expr, int nvar){
+  int nrow = 1;
+  int eidx = 0;
+
+  int * in_expr = malloc(sizeof(int) * nvar);
+  double * deriv_values = malloc(sizeof(double) * nvar);
+  for (int i=0; i<nvar; i++){ in_expr[i] = -1; }
+
+  struct VarListNode * varlist = NULL;
+  int nnz = identify_variables(expr, eidx, in_expr, nvar, &varlist);
+  free(in_expr);
+
+  int ret = differentiate(expr, varlist, deriv_values, nvar);
+
+  // NOTE: These arrays will have to be freed later.
+  int * indices = malloc(sizeof(int) * nnz);
+  int * indptr = malloc(sizeof(int) * 2);
+  double * csr_values = malloc(sizeof(double) * nnz);
+
+  // We only have one row, so indptr is trivial
+  indptr[0] = 0;
+  indptr[1] = nnz;
+
+  struct Variable * vararray = malloc(sizeof(struct Variable) * nnz);
+  struct VarListNode * tempnode = varlist;
+  for (int i=0; i<nnz; i++){
+    vararray[i] = *(tempnode->variable);
+    tempnode = tempnode->next;
+    indices[i] = vararray[i].index;
+    csr_values[i] = deriv_values[indices[i]];
+  }
+  // Make sure nnz is the length of our linked list.
+  assert(tempnode == NULL);
+
+  struct CSRMatrix deriv_matrix = {
+    .nnz = nnz,
+    .nrow = 1,
+    .ncol = nvar,
+    .indptr = indptr,
+    .indices = indices,
+    .values = csr_values,
+  };
+
+  free_varlist(&varlist);
+
+  return deriv_matrix;
 }
