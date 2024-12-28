@@ -12,8 +12,43 @@ struct CSRMatrix {
   double * values;
 };
 
+/*
+ * Identify variables that participate in an expression.
+ * Store the resulting variables in a linked list.
+ *
+ * struct Node expr:
+ *
+ *     Expression to identify variables of
+ *
+ * int eidx:
+ *
+ *     Index of expression. This is used to determine if a variable has
+ *     already been encountered in this expression.
+ *
+ * int * in_expr:
+ *
+ *     Array containing expression indices where each variable was last
+ *     encountered. If in_expr[varid] == eidx, we don't add the variable
+ *     to the list.
+ *
+ * int nvar:
+ *
+ *     Number of variables (total, not just in this expression)
+ *
+ * struct VarListNode ** head:
+ *
+ *     Linked list to add variables to. Usually, this should start
+ *     as NULL.
+ *
+ */
 int identify_variables(struct Node expr, int eidx, int * in_expr, int nvar, struct VarListNode ** head);
+// Why does this accept VarListNode**? It seems VarListNode* would be sufficient.
+// TODO: Update this.
 void free_varlist(struct VarListNode ** head);
+// What should the input type be here? I don't anticipate malloc-ing a
+// CSRMatrix very often, so I usually probably just want to free the
+// contents of the arrays.
+void free_csrmatrix(struct CSRMatrix csr);
 void print_csrmatrix(struct CSRMatrix);
 
 int identify_variables(
@@ -98,4 +133,10 @@ void print_csrmatrix(struct CSRMatrix csr){
     printf("\n");
   }
   printf("==========\n");
+}
+
+void free_csrmatrix(struct CSRMatrix csr){
+  free(csr.indptr);
+  free(csr.indices);
+  free(csr.values);
 }
