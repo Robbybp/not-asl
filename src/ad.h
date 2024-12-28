@@ -86,11 +86,14 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
   for (int i=0; i<expr.data.expr->nargs; i++){
     double * arg_values = malloc(nvar * sizeof(double));
     for (int j=0; j<nvar; j++){arg_values[j] = 0.0;}
+
     differentiate(expr.data.expr->args[i], wrt, arg_values, nvar);
 
     for (int j=0; j<nvar; j++){
       values[j] += d_expr * arg_values[j];
     }
+
+    free(arg_values);
   }
   return 0;
 }
