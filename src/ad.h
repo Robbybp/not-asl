@@ -44,14 +44,28 @@ int _differentiate_product(struct Node * args, int nargs, double * deriv);
 int _differentiate_subtraction(struct Node * args, int nargs, double * deriv);
 int _differentiate_division(struct Node * args, int nargs, double * deriv);
 int _differentiate_power(struct Node * args, int nargs, double * deriv);
+int _differentiate_neg(struct Node * args, int nargs, double * deriv);
+int _differentiate_sqrt(struct Node * args, int nargs, double * deriv);
+int _differentiate_exp(struct Node * args, int nargs, double * deriv);
+int _differentiate_log(struct Node * args, int nargs, double * deriv);
+int _differentiate_sin(struct Node * args, int nargs, double * deriv);
+int _differentiate_cos(struct Node * args, int nargs, double * deriv);
+int _differentiate_tan(struct Node * args, int nargs, double * deriv);
 
 // N_OPERATORS defined in expr.h
-int (* DIFFERENTIATE_OP[5])(struct Node *, int, double *) = {
+int (* DIFFERENTIATE_OP[N_OPERATORS])(struct Node *, int, double *) = {
   _differentiate_sum,
   _differentiate_product,
   _differentiate_subtraction,
   _differentiate_division,
   _differentiate_power,
+  _differentiate_neg,
+  _differentiate_sqrt,
+  _differentiate_exp,
+  _differentiate_log,
+  _differentiate_sin,
+  _differentiate_cos,
+  _differentiate_tan,
 };
 
 int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
@@ -153,6 +167,7 @@ int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
+// NOTE that I could malloc deriv and return it from these functions.
 int _differentiate_division(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of arguments for subtraction node\n");
@@ -186,6 +201,66 @@ int _differentiate_power(struct Node * args, int nargs, double * deriv){
   } else{
     deriv[1] = pow(base, exponent) / log(base);
   }
+  return 0;
+}
+
+int _differentiate_neg(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  deriv[0] = -1;
+  return 0;
+}
+
+int _differentiate_sqrt(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  double arg = evaluate(args[0]);
+  if (arg < 0.0){
+    printf("ERROR: Evaluating square root of negative number\n");
+    char buff[82];
+    to_string(buff, 82, args[1]);
+    printf("Expression: %s\n", buff);
+    exit(-1);
+  }
+  deriv[0] = 1.0 / (2.0 * sqrt(arg));
+  return 0;
+}
+
+int _differentiate_exp(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  deriv[0] = exp(evaluate(args[0]));
+  return 0;
+}
+
+int _differentiate_log(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  double arg = evaluate(args[0]);
+  if (arg <= 0.0){
+    // TODO: Should probably just return NaN here and let the
+    // caller handle it.
+    printf("ERROR: Evaluating log of nonpositive number\n");
+    char buff[82];
+    to_string(buff, 82, args[1]);
+    printf("Expression: %s\n", buff);
+    exit(-1);
+  }
+  deriv[0] = 1.0 / arg;
+  return 0;
+}
+
+int _differentiate_sin(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  deriv[0] = cos(evaluate(args[0]));
+  return 0;
+}
+
+int _differentiate_cos(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  deriv[0] = -sin(evaluate(args[0]));
+  return 0;
+}
+
+int _differentiate_tan(struct Node * args, int nargs, double * deriv){
+  assert(nargs == 1);
+  deriv[0] = 1.0 / pow(cos(evaluate(args[0])), 2.0);
   return 0;
 }
 
