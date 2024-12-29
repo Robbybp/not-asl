@@ -39,6 +39,16 @@ struct CSRMatrix differentiate_expression(struct Node expr, int nvar);
 int _differentiate_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
+int _differentiate_sum(struct Node * args, int nargs, double * deriv);
+int _differentiate_product(struct Node * args, int nargs, double * deriv);
+int _differentiate_subtraction(struct Node * args, int nargs, double * deriv);
+
+// N_OPERATORS defined in expr.h
+int (* DIFFERENTIATE_OP[3])(struct Node *, int, double *) = {
+  _differentiate_sum,
+  _differentiate_product,
+  _differentiate_subtraction,
+};
 
 int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   switch(expr.type){
@@ -60,6 +70,7 @@ int _differentiate_constant(struct Node expr, struct VarListNode * wrt, double *
 
 int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   struct VarListNode * node = wrt;
+  // If I didn't have wrt, I could just say values[expr.data.var->index] = 1.0
   while (node){
     int idx = expr.data.var->index;
     if (idx == node->variable->index){
@@ -81,24 +92,31 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
   //
   // TODO: Branch on operator to evaluate local derivative
   // TODO: This should be a vector in the space of arguments
-  double d_expr = 1.0;
+  double * deriv_op = malloc(sizeof(double) * expr.data.expr->nargs);
+  // Evaluate the derivative of the operator. This is a vector of multipliers
+  // for the derivatives of each argument.
+  DIFFERENTIATE_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
 
   for (int i=0; i<expr.data.expr->nargs; i++){
+    // This is inefficient. I allocate an array of size nvar for every
+    // argument of every expression.
+    // This is forward differentiation. But presumably I could store these
+    // as vectors in the space of `wrt` variables?
     double * arg_values = malloc(nvar * sizeof(double));
     for (int j=0; j<nvar; j++){arg_values[j] = 0.0;}
 
     differentiate(expr.data.expr->args[i], wrt, arg_values, nvar);
 
     for (int j=0; j<nvar; j++){
-      values[j] += d_expr * arg_values[j];
+      values[j] += deriv_op[i] * arg_values[j];
     }
 
     free(arg_values);
   }
+  free(deriv_op);
   return 0;
 }
 
-int _differentiate_sum(struct Node * args, int nargs, double * deriv);
 int _differentiate_sum(struct Node * args, int nargs, double * deriv){
   // NOTE: OperatorNodes are not evaluated here. If I add side-effects to evaluate,
   // need to make sure this happens in this case.
@@ -108,7 +126,6 @@ int _differentiate_sum(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_product(struct Node * args, int nargs, double * deriv);
 int _differentiate_product(struct Node * args, int nargs, double * deriv){
   for (int j=0; j<nargs; j++){
     // TODO: Re-use expression values that have been previously evaluated
@@ -122,7 +139,6 @@ int _differentiate_product(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_subtraction(struct Node * args, int nargs, double * deriv);
 int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of nodes for subtraction node\n");
