@@ -42,12 +42,16 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
 int _differentiate_sum(struct Node * args, int nargs, double * deriv);
 int _differentiate_product(struct Node * args, int nargs, double * deriv);
 int _differentiate_subtraction(struct Node * args, int nargs, double * deriv);
+int _differentiate_division(struct Node * args, int nargs, double * deriv);
+int _differentiate_power(struct Node * args, int nargs, double * deriv);
 
 // N_OPERATORS defined in expr.h
-int (* DIFFERENTIATE_OP[3])(struct Node *, int, double *) = {
+int (* DIFFERENTIATE_OP[5])(struct Node *, int, double *) = {
   _differentiate_sum,
   _differentiate_product,
   _differentiate_subtraction,
+  _differentiate_division,
+  _differentiate_power,
 };
 
 int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
@@ -142,9 +146,46 @@ int _differentiate_product(struct Node * args, int nargs, double * deriv){
 int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of nodes for subtraction node\n");
+    exit(-1);
   }
   deriv[0] = 1.0;
   deriv[1] = -1.0;
+  return 0;
+}
+
+int _differentiate_division(struct Node * args, int nargs, double * deriv){
+  if (nargs != 2){
+    printf("ERROR: Wrong number of arguments for subtraction node\n");
+    exit(-1);
+  }
+  double numerator = evaluate(args[0]);
+  double denominator = evaluate(args[1]);
+  if (denominator == 0.0){
+    printf("ERROR: Evaluating derivative with denominator of zero\n");
+    char buff[82];
+    to_string(buff, 82, args[1]);
+    printf("Expression: %s\n", buff);
+    exit(-1);
+  }
+  deriv[0] = 1.0 / denominator;
+  deriv[1] = -1.0 * numerator / (denominator * denominator);
+  return 0;
+}
+
+int _differentiate_power(struct Node * args, int nargs, double * deriv){
+  if (nargs != 2){
+    printf("ERROR: Wrong number of arguments for power node\n");
+  }
+  double base = evaluate(args[0]);
+  double exponent = evaluate(args[1]);
+  deriv[0] = exponent * pow(base, (exponent - 1.0));
+  if (base == 0.0){
+    deriv[1] = 0.0;
+  } else if (base == 1.0){
+    deriv[1] = 0.0;
+  } else{
+    deriv[1] = pow(base, exponent) / log(base);
+  }
   return 0;
 }
 

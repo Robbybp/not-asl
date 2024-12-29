@@ -7,6 +7,7 @@
 #include "expr.h"
 #include "nl.h"
 #include "sparse.h"
+#include "ad.h"
 
 int test(int narg, char ** argv){
   // Index is the right choice here, because variables will want to store bounds
@@ -250,6 +251,15 @@ int main(int narg, char ** argv){
     }
     printf("\n");
   }
+
+  for (int i=0; i<ncon; i++){
+    struct CSRMatrix deriv = differentiate_expression(constraint_expressions[i], nvar);
+    printf("Constraint %d derivative:", i);
+    print_csrmatrix(deriv);
+    printf("\n");
+  }
+
+  return 0;
 
   // Construct indptr and indices for CSR matrix
   // indptr has length nrow+1
