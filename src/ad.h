@@ -6,12 +6,12 @@
  *
  * struct Node expr:
  *
- *     Root node of expression to differentiate.
+ *     Root node of expression to forward_diff.
  *
  * struct VarListNode * wrt:
  *
  *     Linked list. Each node contains a pointer to a variable. These are the variables
- *     with respect to which we differentiate. We need this so we can eventually
+ *     with respect to which we forward_diff. We need this so we can eventually
  *     construct a sparse derivative matrix. TODO: Should we construct these during
  *     the AD algorithm?
  *
@@ -29,64 +29,64 @@
 // TODO: The linked list data structure is convenient for construction,
 // but not that easy to work with. Should I add a wrapper function that
 // returns an array?
-int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
+int forward_diff(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 
-struct CSRMatrix differentiate_expression(struct Node expr, int nvar);
+struct CSRMatrix forward_diff_expression(struct Node expr, int nvar);
 
 // Need intermediate storage
 // Can I do this with O(1) storage?
 //
-int _differentiate_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
-int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
-int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
-int _differentiate_sum(struct Node * args, int nargs, double * deriv);
-int _differentiate_product(struct Node * args, int nargs, double * deriv);
-int _differentiate_subtraction(struct Node * args, int nargs, double * deriv);
-int _differentiate_division(struct Node * args, int nargs, double * deriv);
-int _differentiate_power(struct Node * args, int nargs, double * deriv);
-int _differentiate_neg(struct Node * args, int nargs, double * deriv);
-int _differentiate_sqrt(struct Node * args, int nargs, double * deriv);
-int _differentiate_exp(struct Node * args, int nargs, double * deriv);
-int _differentiate_log(struct Node * args, int nargs, double * deriv);
-int _differentiate_sin(struct Node * args, int nargs, double * deriv);
-int _differentiate_cos(struct Node * args, int nargs, double * deriv);
-int _differentiate_tan(struct Node * args, int nargs, double * deriv);
+int _forward_diff_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
+int _forward_diff_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
+int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
+int _forward_diff_sum(struct Node * args, int nargs, double * deriv);
+int _forward_diff_product(struct Node * args, int nargs, double * deriv);
+int _forward_diff_subtraction(struct Node * args, int nargs, double * deriv);
+int _forward_diff_division(struct Node * args, int nargs, double * deriv);
+int _forward_diff_power(struct Node * args, int nargs, double * deriv);
+int _forward_diff_neg(struct Node * args, int nargs, double * deriv);
+int _forward_diff_sqrt(struct Node * args, int nargs, double * deriv);
+int _forward_diff_exp(struct Node * args, int nargs, double * deriv);
+int _forward_diff_log(struct Node * args, int nargs, double * deriv);
+int _forward_diff_sin(struct Node * args, int nargs, double * deriv);
+int _forward_diff_cos(struct Node * args, int nargs, double * deriv);
+int _forward_diff_tan(struct Node * args, int nargs, double * deriv);
 
 // N_OPERATORS defined in expr.h
 int (* DIFFERENTIATE_OP[N_OPERATORS])(struct Node *, int, double *) = {
-  _differentiate_sum,
-  _differentiate_product,
-  _differentiate_subtraction,
-  _differentiate_division,
-  _differentiate_power,
-  _differentiate_neg,
-  _differentiate_sqrt,
-  _differentiate_exp,
-  _differentiate_log,
-  _differentiate_sin,
-  _differentiate_cos,
-  _differentiate_tan,
+  _forward_diff_sum,
+  _forward_diff_product,
+  _forward_diff_subtraction,
+  _forward_diff_division,
+  _forward_diff_power,
+  _forward_diff_neg,
+  _forward_diff_sqrt,
+  _forward_diff_exp,
+  _forward_diff_log,
+  _forward_diff_sin,
+  _forward_diff_cos,
+  _forward_diff_tan,
 };
 
-int differentiate(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
+int forward_diff(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   switch(expr.type){
     case CONST_NODE:
-      return _differentiate_constant(expr, wrt, values, nvar);
+      return _forward_diff_constant(expr, wrt, values, nvar);
     case VAR_NODE:
-      return _differentiate_variable(expr, wrt, values, nvar);
+      return _forward_diff_variable(expr, wrt, values, nvar);
     case OP_NODE:
-      return _differentiate_expression(expr, wrt, values, nvar);
+      return _forward_diff_expression(expr, wrt, values, nvar);
   }
 }
 
-int _differentiate_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
+int _forward_diff_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   for (int i=0; i<nvar; i++){
     values[0] = 0.0;
   }
   return nvar;
 }
 
-int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
+int _forward_diff_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   struct VarListNode * node = wrt;
   // If I didn't have wrt, I could just say values[expr.data.var->index] = 1.0
   while (node){
@@ -104,7 +104,7 @@ int _differentiate_variable(struct Node expr, struct VarListNode * wrt, double *
   return nvar;
 }
 
-int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
+int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   // expr = f(arg1, arg2, ...)
   // df/d(wrt) = f'(arg1(wrt), arg2(wrt), ...) * (d(arg1)/d(wrt) + d(arg2)/d(wrt) + ...)
   //
@@ -123,7 +123,7 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
     double * arg_values = malloc(nvar * sizeof(double));
     for (int j=0; j<nvar; j++){arg_values[j] = 0.0;}
 
-    differentiate(expr.data.expr->args[i], wrt, arg_values, nvar);
+    forward_diff(expr.data.expr->args[i], wrt, arg_values, nvar);
 
     for (int j=0; j<nvar; j++){
       values[j] += deriv_op[i] * arg_values[j];
@@ -135,7 +135,7 @@ int _differentiate_expression(struct Node expr, struct VarListNode * wrt, double
   return 0;
 }
 
-int _differentiate_sum(struct Node * args, int nargs, double * deriv){
+int _forward_diff_sum(struct Node * args, int nargs, double * deriv){
   // NOTE: OperatorNodes are not evaluated here. If I add side-effects to evaluate,
   // need to make sure this happens in this case.
   for (int j=0; j<nargs; j++){
@@ -144,7 +144,7 @@ int _differentiate_sum(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_product(struct Node * args, int nargs, double * deriv){
+int _forward_diff_product(struct Node * args, int nargs, double * deriv){
   for (int j=0; j<nargs; j++){
     // TODO: Re-use expression values that have been previously evaluated
     deriv[j] = 1.0;
@@ -157,7 +157,7 @@ int _differentiate_product(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
+int _forward_diff_subtraction(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of nodes for subtraction node\n");
     exit(-1);
@@ -168,7 +168,7 @@ int _differentiate_subtraction(struct Node * args, int nargs, double * deriv){
 }
 
 // NOTE that I could malloc deriv and return it from these functions.
-int _differentiate_division(struct Node * args, int nargs, double * deriv){
+int _forward_diff_division(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of arguments for subtraction node\n");
     exit(-1);
@@ -187,7 +187,7 @@ int _differentiate_division(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_power(struct Node * args, int nargs, double * deriv){
+int _forward_diff_power(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of arguments for power node\n");
   }
@@ -204,13 +204,13 @@ int _differentiate_power(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_neg(struct Node * args, int nargs, double * deriv){
+int _forward_diff_neg(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   deriv[0] = -1;
   return 0;
 }
 
-int _differentiate_sqrt(struct Node * args, int nargs, double * deriv){
+int _forward_diff_sqrt(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   double arg = evaluate(args[0]);
   if (arg < 0.0){
@@ -224,13 +224,13 @@ int _differentiate_sqrt(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_exp(struct Node * args, int nargs, double * deriv){
+int _forward_diff_exp(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   deriv[0] = exp(evaluate(args[0]));
   return 0;
 }
 
-int _differentiate_log(struct Node * args, int nargs, double * deriv){
+int _forward_diff_log(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   double arg = evaluate(args[0]);
   if (arg <= 0.0){
@@ -246,19 +246,19 @@ int _differentiate_log(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-int _differentiate_sin(struct Node * args, int nargs, double * deriv){
+int _forward_diff_sin(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   deriv[0] = cos(evaluate(args[0]));
   return 0;
 }
 
-int _differentiate_cos(struct Node * args, int nargs, double * deriv){
+int _forward_diff_cos(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   deriv[0] = -sin(evaluate(args[0]));
   return 0;
 }
 
-int _differentiate_tan(struct Node * args, int nargs, double * deriv){
+int _forward_diff_tan(struct Node * args, int nargs, double * deriv){
   assert(nargs == 1);
   deriv[0] = 1.0 / pow(cos(evaluate(args[0])), 2.0);
   return 0;
@@ -268,7 +268,7 @@ int _differentiate_tan(struct Node * args, int nargs, double * deriv){
  * Differentiate an expression and return a single CSR matrix
  * (here, a sparse vector).
  */
-struct CSRMatrix differentiate_expression(struct Node expr, int nvar){
+struct CSRMatrix forward_diff_expression(struct Node expr, int nvar){
   int nrow = 1;
   int eidx = 0;
 
@@ -280,7 +280,7 @@ struct CSRMatrix differentiate_expression(struct Node expr, int nvar){
   int nnz = identify_variables(expr, eidx, in_expr, nvar, &varlist);
   free(in_expr);
 
-  int ret = differentiate(expr, varlist, deriv_values, nvar);
+  int ret = forward_diff(expr, varlist, deriv_values, nvar);
 
   // NOTE: These arrays will have to be freed later.
   int * indices = malloc(sizeof(int) * nnz);

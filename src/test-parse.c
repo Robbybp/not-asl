@@ -253,7 +253,7 @@ int main(int narg, char ** argv){
   }
 
   for (int i=0; i<ncon; i++){
-    struct CSRMatrix deriv = differentiate_expression(constraint_expressions[i], nvar);
+    struct CSRMatrix deriv = forward_diff_expression(constraint_expressions[i], nvar);
     printf("Constraint %d derivative:", i);
     print_csrmatrix(deriv);
     printf("\n");

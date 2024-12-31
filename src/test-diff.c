@@ -29,17 +29,17 @@ int main(int narg, char ** argv){
   struct CSRMatrix deriv;
 
   struct Node expr1 = {.type=CONST_NODE, .data=5.4};
-  deriv = differentiate_expression(expr1, nvar);
+  deriv = forward_diff_expression(expr1, nvar);
   print_csrmatrix(deriv);
   free_csrmatrix(deriv);
 
   struct Node expr2 = {VAR_NODE, xdata};
-  deriv = differentiate_expression(expr2, nvar);
+  deriv = forward_diff_expression(expr2, nvar);
   print_csrmatrix(deriv);
   free_csrmatrix(deriv);
 
   expr2.data = zdata;
-  deriv = differentiate_expression(expr2, nvar);
+  deriv = forward_diff_expression(expr2, nvar);
   to_string(buffer, bsize, expr2);
   printf("\nExpression: %s", buffer);
   print_csrmatrix(deriv);
@@ -59,7 +59,7 @@ int main(int narg, char ** argv){
   expr3.data = e3data;
   to_string(buffer, bsize, expr3);
   printf("\nExpression: %s", buffer);
-  deriv = differentiate_expression(expr3, nvar);
+  deriv = forward_diff_expression(expr3, nvar);
   print_csrmatrix(deriv);
   free_csrmatrix(deriv);
 
@@ -72,7 +72,7 @@ int main(int narg, char ** argv){
   expr4.data = e4data;
   to_string(buffer, bsize, expr4);
   printf("\nExpression: %s", buffer);
-  deriv = differentiate_expression(expr4, nvar);
+  deriv = forward_diff_expression(expr4, nvar);
   print_csrmatrix(deriv);
   free_csrmatrix(deriv);
 
