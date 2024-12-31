@@ -7,7 +7,7 @@
 #include "expr.h"
 #include "nl.h"
 #include "sparse.h"
-#include "ad.h"
+#include "forward_diff.h"
 
 int main(int narg, char ** argv){
   const int nvar = 3;

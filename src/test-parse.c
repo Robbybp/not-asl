@@ -7,7 +7,7 @@
 #include "expr.h"
 #include "nl.h"
 #include "sparse.h"
-#include "ad.h"
+#include "forward_diff.h"
 
 int test(int narg, char ** argv){
   // Index is the right choice here, because variables will want to store bounds
