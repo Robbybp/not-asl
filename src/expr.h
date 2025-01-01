@@ -96,7 +96,6 @@ struct OperatorNode{
   // variable or value.
   struct Node *args;
   double value;
-  double adjoint;
 };
 
 union NodeData {
@@ -136,6 +135,10 @@ union NodeData {
 struct Node {
   enum NodeType type;
   union NodeData data;
+  // We need adjoints for variables and operators, so we store them
+  // on the node. We'll also compute them for constants, but we won't use
+  // these for anything.
+  double adjoint;
 };
 
 // Evaluation functions
