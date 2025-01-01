@@ -8,6 +8,9 @@
 #include "nl.h"
 #include "sparse.h"
 #include "forward_diff.h"
+#include "reverse_diff.h"
+
+const bool REVERSE = true;
 
 int test(int narg, char ** argv){
   // Index is the right choice here, because variables will want to store bounds
@@ -253,7 +256,12 @@ int main(int narg, char ** argv){
   }
 
   for (int i=0; i<ncon; i++){
-    struct CSRMatrix deriv = forward_diff_expression(constraint_expressions[i], nvar);
+    struct CSRMatrix deriv;
+    if (REVERSE){
+      deriv = reverse_diff_expression(constraint_expressions[i], nvar);
+    }else{
+      deriv = forward_diff_expression(constraint_expressions[i], nvar);
+    }
     printf("Constraint %d derivative:", i);
     print_csrmatrix(deriv);
     printf("\n");
