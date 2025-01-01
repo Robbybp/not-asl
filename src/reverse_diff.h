@@ -18,36 +18,12 @@ int reverse_diff(struct Node expr, int nnz, int * wrt, double * values);
 int _reverse_diff_constant(struct Node expr, int nnz, int * wrt, double * values);
 int _reverse_diff_variable(struct Node expr, int nnz, int * wrt, double * values);
 int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values);
-//int _reverse_diff_sum(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_product(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_subtraction(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_division(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_power(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_neg(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_sqrt(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_exp(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_log(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_sin(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_cos(struct Node * args, int nargs, double * deriv);
-//int _reverse_diff_tan(struct Node * args, int nargs, double * deriv);
 
 // When evaluating local derivatives, there's no difference between
 // forward and reverse.
 // These methods currently evaluate every node from scratch, which is
 // very inefficient.
 int (* REVERSE_DIFF_OP[N_OPERATORS])(struct Node *, int, double *) = {
-  //_reverse_diff_sum,
-  //_reverse_diff_product,
-  //_reverse_diff_subtraction,
-  //_reverse_diff_division,
-  //_reverse_diff_power,
-  //_reverse_diff_neg,
-  //_reverse_diff_sqrt,
-  //_reverse_diff_exp,
-  //_reverse_diff_log,
-  //_reverse_diff_sin,
-  //_reverse_diff_cos,
-  //_reverse_diff_tan,
   _forward_diff_sum,
   _forward_diff_product,
   _forward_diff_subtraction,
