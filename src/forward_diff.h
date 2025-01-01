@@ -53,7 +53,7 @@ int _forward_diff_cos(struct Node * args, int nargs, double * deriv);
 int _forward_diff_tan(struct Node * args, int nargs, double * deriv);
 
 // N_OPERATORS defined in expr.h
-int (* DIFFERENTIATE_OP[N_OPERATORS])(struct Node *, int, double *) = {
+int (* FORWARD_DIFF_OP[N_OPERATORS])(struct Node *, int, double *) = {
   _forward_diff_sum,
   _forward_diff_product,
   _forward_diff_subtraction,
@@ -113,7 +113,7 @@ int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double 
   double * deriv_op = malloc(sizeof(double) * expr.data.expr->nargs);
   // Evaluate the derivative of the operator. This is a vector of multipliers
   // for the derivatives of each argument.
-  DIFFERENTIATE_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
+  FORWARD_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
 
   for (int i=0; i<expr.data.expr->nargs; i++){
     // This is inefficient. I allocate an array of size nvar for every
@@ -195,11 +195,10 @@ int _forward_diff_power(struct Node * args, int nargs, double * deriv){
   double exponent = evaluate(args[1]);
   deriv[0] = exponent * pow(base, (exponent - 1.0));
   if (base == 0.0){
-    deriv[1] = 0.0;
-  } else if (base == 1.0){
+    // TODO: Handle base < 0 somehow?
     deriv[1] = 0.0;
   } else{
-    deriv[1] = pow(base, exponent) / log(base);
+    deriv[1] = pow(base, exponent) * log(base);
   }
   return 0;
 }
@@ -274,7 +273,10 @@ struct CSRMatrix forward_diff_expression(struct Node expr, int nvar){
 
   int * in_expr = malloc(sizeof(int) * nvar);
   double * deriv_values = malloc(sizeof(double) * nvar);
-  for (int i=0; i<nvar; i++){ in_expr[i] = -1; }
+  for (int i=0; i<nvar; i++){
+    in_expr[i] = -1;
+    deriv_values[i] = 0.0;
+  }
 
   struct VarListNode * varlist = NULL;
   int nnz = identify_variables(expr, eidx, in_expr, nvar, &varlist);
