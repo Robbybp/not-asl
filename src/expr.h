@@ -4,7 +4,10 @@
 struct Node;
 struct OperatorNode;
 
-const int N_OPERATORS = 12;
+// File-scope arrays with `const int` length appears to be an optional feature
+// of C99 compilers, supported by clang but not gcc-13.
+//const int N_OPERATORS = 12;
+#define N_OPERATORS 12
 enum OperatorType {
   SUM,
   PRODUCT,
