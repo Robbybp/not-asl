@@ -266,10 +266,10 @@ int main(int narg, char ** argv){
     printf("Constraint %d derivative:", i);
     print_csrmatrix(deriv);
     printf("\n");
+    free_csrmatrix(deriv);
   }
 
-  return 0;
-
+  // TODO: Function to construct CSRMatrix for a group of constraints
   // Construct indptr and indices for CSR matrix
   // indptr has length nrow+1
   int jac_nrow = ncon;
@@ -306,14 +306,6 @@ int main(int narg, char ** argv){
   };
 
   print_csrmatrix(jacobian);
-
-  // Converting varlists[0] into an array
-  struct Variable * vararray = malloc(sizeof(struct Variable) * nvar_in_con[0]);
-  struct VarListNode * tempnode = varlists[0];
-  for (int i=0; i<nvar_in_con[0]; i++){
-    vararray[i] = *(tempnode->variable);
-    tempnode = tempnode->next;
-  }
 
   // Free linked lists of variables
   for (int i=0; i<ncon; i++){
