@@ -2,7 +2,7 @@ model.nl:
 	python model.py --model=unary
 
 test-parse: model.nl src/test-parse.c
-	gcc -o test-parse src/test-parse.c
+	gcc -g -o test-parse src/test-parse.c
 	./test-parse model.nl
 
 test-diff: model.nl src/test-diff.c
