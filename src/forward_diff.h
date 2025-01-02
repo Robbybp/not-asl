@@ -107,10 +107,7 @@ int _forward_diff_variable(struct Node expr, struct VarListNode * wrt, double * 
 int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   // expr = f(arg1, arg2, ...)
   // df/d(wrt) = f'(arg1(wrt), arg2(wrt), ...) * (d(arg1)/d(wrt) + d(arg2)/d(wrt) + ...)
-  //
-  // TODO: Branch on operator to evaluate local derivative
-  // TODO: This should be a vector in the space of arguments
-  double * deriv_op = malloc(sizeof(double) * expr.data.expr->nargs);
+  double deriv_op[expr.data.expr->nargs];
   // Evaluate the derivative of the operator. This is a vector of multipliers
   // for the derivatives of each argument.
   FORWARD_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
@@ -120,7 +117,7 @@ int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double 
     // argument of every expression.
     // This is forward differentiation. But presumably I could store these
     // as vectors in the space of `wrt` variables?
-    double * arg_values = malloc(nvar * sizeof(double));
+    double arg_values[nvar];
     for (int j=0; j<nvar; j++){arg_values[j] = 0.0;}
 
     forward_diff(expr.data.expr->args[i], wrt, arg_values, nvar);
@@ -128,10 +125,7 @@ int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double 
     for (int j=0; j<nvar; j++){
       values[j] += deriv_op[i] * arg_values[j];
     }
-
-    free(arg_values);
   }
-  free(deriv_op);
   return 0;
 }
 
@@ -167,7 +161,6 @@ int _forward_diff_subtraction(struct Node * args, int nargs, double * deriv){
   return 0;
 }
 
-// NOTE that I could malloc deriv and return it from these functions.
 int _forward_diff_division(struct Node * args, int nargs, double * deriv){
   if (nargs != 2){
     printf("ERROR: Wrong number of arguments for subtraction node\n");
@@ -271,8 +264,9 @@ struct CSRMatrix forward_diff_expression(struct Node expr, int nvar){
   int nrow = 1;
   int eidx = 0;
 
-  int * in_expr = malloc(sizeof(int) * nvar);
-  double * deriv_values = malloc(sizeof(double) * nvar);
+  int in_expr[nvar];
+  double deriv_values[nvar];
+
   for (int i=0; i<nvar; i++){
     in_expr[i] = -1;
     deriv_values[i] = 0.0;
@@ -280,8 +274,6 @@ struct CSRMatrix forward_diff_expression(struct Node expr, int nvar){
 
   struct VarListNode * varlist = NULL;
   int nnz = identify_variables(expr, eidx, in_expr, nvar, &varlist);
-  free(in_expr);
-
   int ret = forward_diff(expr, varlist, deriv_values, nvar);
 
   // NOTE: These arrays will have to be freed later.
@@ -293,13 +285,11 @@ struct CSRMatrix forward_diff_expression(struct Node expr, int nvar){
   indptr[0] = 0;
   indptr[1] = nnz;
 
-  struct Variable * vararray = malloc(sizeof(struct Variable) * nnz);
   struct VarListNode * tempnode = varlist;
   for (int i=0; i<nnz; i++){
-    vararray[i] = *(tempnode->variable);
-    tempnode = tempnode->next;
-    indices[i] = vararray[i].index;
+    indices[i] = tempnode->variable->index;
     csr_values[i] = deriv_values[indices[i]];
+    tempnode = tempnode->next;
   }
   // Make sure nnz is the length of our linked list.
   assert(tempnode == NULL);
