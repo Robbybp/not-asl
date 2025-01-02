@@ -42,11 +42,10 @@ struct CSRMatrix reverse_diff_expression(struct Node expr, int nvar){
   int nrow = 1;
   int eidx = 0;
 
-  int * in_expr = malloc(sizeof(int) * nvar);
+  int in_expr[nvar];
   for (int i=0; i<nvar; i++){ in_expr[i] = -1; }
   struct VarListNode * varlist = NULL;
   int nnz = identify_variables(expr, eidx, in_expr, nvar, &varlist);
-  free(in_expr);
 
   // We'll use an array of int to indicate the indices of variables
   // that appear in this constraint.
@@ -109,7 +108,7 @@ int _reverse_diff_variable(struct Node expr, int nnz, int * wrt, double * values
 int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values){
   // This computes the local derivatives of the operator with respect to each
   // operand.
-  double * deriv_op = malloc(sizeof(double) * expr.data.expr->nargs);
+  double deriv_op[expr.data.expr->nargs];
   REVERSE_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
 
   // Update the adjoints for subexpressions
@@ -122,7 +121,5 @@ int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values
     // we get to the leaves.
     reverse_diff(expr.data.expr->args[i], nnz, wrt, values);
   }
-
-  free(deriv_op);
   return 0;
 }
