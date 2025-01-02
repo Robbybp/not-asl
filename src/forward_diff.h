@@ -25,10 +25,9 @@
  *     Number of variables (total, not just in this expression).
  *
  */
-// TODO: enum for forward/backward mode, or separate functions
 // TODO: The linked list data structure is convenient for construction,
-// but not that easy to work with. Should I add a wrapper function that
-// returns an array?
+// but not that easy to work with. Should I update this function to return
+// an array.
 int forward_diff(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 
 struct CSRMatrix forward_diff_expression(struct Node expr, int nvar);
@@ -39,34 +38,6 @@ struct CSRMatrix forward_diff_expression(struct Node expr, int nvar);
 int _forward_diff_constant(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 int _forward_diff_variable(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
 int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double * values, int nvar);
-int _forward_diff_sum(struct Node * args, int nargs, double * deriv);
-int _forward_diff_product(struct Node * args, int nargs, double * deriv);
-int _forward_diff_subtraction(struct Node * args, int nargs, double * deriv);
-int _forward_diff_division(struct Node * args, int nargs, double * deriv);
-int _forward_diff_power(struct Node * args, int nargs, double * deriv);
-int _forward_diff_neg(struct Node * args, int nargs, double * deriv);
-int _forward_diff_sqrt(struct Node * args, int nargs, double * deriv);
-int _forward_diff_exp(struct Node * args, int nargs, double * deriv);
-int _forward_diff_log(struct Node * args, int nargs, double * deriv);
-int _forward_diff_sin(struct Node * args, int nargs, double * deriv);
-int _forward_diff_cos(struct Node * args, int nargs, double * deriv);
-int _forward_diff_tan(struct Node * args, int nargs, double * deriv);
-
-// N_OPERATORS defined in expr.h
-int (* FORWARD_DIFF_OP[N_OPERATORS])(struct Node *, int, double *) = {
-  _forward_diff_sum,
-  _forward_diff_product,
-  _forward_diff_subtraction,
-  _forward_diff_division,
-  _forward_diff_power,
-  _forward_diff_neg,
-  _forward_diff_sqrt,
-  _forward_diff_exp,
-  _forward_diff_log,
-  _forward_diff_sin,
-  _forward_diff_cos,
-  _forward_diff_tan,
-};
 
 int forward_diff(struct Node expr, struct VarListNode * wrt, double * values, int nvar){
   switch(expr.type){
@@ -110,7 +81,7 @@ int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double 
   double deriv_op[expr.data.expr->nargs];
   // Evaluate the derivative of the operator. This is a vector of multipliers
   // for the derivatives of each argument.
-  FORWARD_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
+  DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
 
   for (int i=0; i<expr.data.expr->nargs; i++){
     // This is inefficient. I allocate an array of size nvar for every
@@ -126,133 +97,6 @@ int _forward_diff_expression(struct Node expr, struct VarListNode * wrt, double 
       values[j] += deriv_op[i] * arg_values[j];
     }
   }
-  return 0;
-}
-
-int _forward_diff_sum(struct Node * args, int nargs, double * deriv){
-  // NOTE: OperatorNodes are not evaluated here. If I add side-effects to evaluate,
-  // need to make sure this happens in this case.
-  for (int j=0; j<nargs; j++){
-    deriv[j] = 1.0;
-  }
-  return 0;
-}
-
-int _forward_diff_product(struct Node * args, int nargs, double * deriv){
-  for (int j=0; j<nargs; j++){
-    // TODO: Re-use expression values that have been previously evaluated
-    deriv[j] = 1.0;
-    for (int jj=0; jj<nargs; jj++){
-      if (j != jj){
-        deriv[j] *= evaluate(args[jj]);
-      }
-    }
-  }
-  return 0;
-}
-
-int _forward_diff_subtraction(struct Node * args, int nargs, double * deriv){
-  if (nargs != 2){
-    printf("ERROR: Wrong number of nodes for subtraction node\n");
-    exit(-1);
-  }
-  deriv[0] = 1.0;
-  deriv[1] = -1.0;
-  return 0;
-}
-
-int _forward_diff_division(struct Node * args, int nargs, double * deriv){
-  if (nargs != 2){
-    printf("ERROR: Wrong number of arguments for subtraction node\n");
-    exit(-1);
-  }
-  double numerator = evaluate(args[0]);
-  double denominator = evaluate(args[1]);
-  if (denominator == 0.0){
-    printf("ERROR: Evaluating derivative with denominator of zero\n");
-    char buff[82];
-    to_string(buff, 82, args[1]);
-    printf("Expression: %s\n", buff);
-    exit(-1);
-  }
-  deriv[0] = 1.0 / denominator;
-  deriv[1] = -1.0 * numerator / (denominator * denominator);
-  return 0;
-}
-
-int _forward_diff_power(struct Node * args, int nargs, double * deriv){
-  if (nargs != 2){
-    printf("ERROR: Wrong number of arguments for power node\n");
-  }
-  double base = evaluate(args[0]);
-  double exponent = evaluate(args[1]);
-  deriv[0] = exponent * pow(base, (exponent - 1.0));
-  if (base == 0.0){
-    // TODO: Handle base < 0 somehow?
-    deriv[1] = 0.0;
-  } else{
-    deriv[1] = pow(base, exponent) * log(base);
-  }
-  return 0;
-}
-
-int _forward_diff_neg(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  deriv[0] = -1;
-  return 0;
-}
-
-int _forward_diff_sqrt(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  double arg = evaluate(args[0]);
-  if (arg < 0.0){
-    printf("ERROR: Evaluating square root of negative number\n");
-    char buff[82];
-    to_string(buff, 82, args[1]);
-    printf("Expression: %s\n", buff);
-    exit(-1);
-  }
-  deriv[0] = 1.0 / (2.0 * sqrt(arg));
-  return 0;
-}
-
-int _forward_diff_exp(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  deriv[0] = exp(evaluate(args[0]));
-  return 0;
-}
-
-int _forward_diff_log(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  double arg = evaluate(args[0]);
-  if (arg <= 0.0){
-    // TODO: Should probably just return NaN here and let the
-    // caller handle it.
-    printf("ERROR: Evaluating log of nonpositive number\n");
-    char buff[82];
-    to_string(buff, 82, args[1]);
-    printf("Expression: %s\n", buff);
-    exit(-1);
-  }
-  deriv[0] = 1.0 / arg;
-  return 0;
-}
-
-int _forward_diff_sin(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  deriv[0] = cos(evaluate(args[0]));
-  return 0;
-}
-
-int _forward_diff_cos(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  deriv[0] = -sin(evaluate(args[0]));
-  return 0;
-}
-
-int _forward_diff_tan(struct Node * args, int nargs, double * deriv){
-  assert(nargs == 1);
-  deriv[0] = 1.0 / pow(cos(evaluate(args[0])), 2.0);
   return 0;
 }
 

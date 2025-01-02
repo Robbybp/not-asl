@@ -7,6 +7,7 @@
 #include "expr.h"
 #include "nl.h"
 #include "sparse.h"
+#include "op_derivs.h"
 #include "forward_diff.h"
 #include "reverse_diff.h"
 

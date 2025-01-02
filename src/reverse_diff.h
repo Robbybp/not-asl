@@ -12,31 +12,11 @@ struct CSRMatrix reverse_diff_expression(struct Node expr, int nvar);
  * the derivative values in `values`. The variable's position in
  * `wrt` corresponds to its derivative's position in `values`.
  */
-// TODO: Should this be called reverse_diff_inplace?
 int reverse_diff(struct Node expr, int nnz, int * wrt, double * values);
 
 int _reverse_diff_constant(struct Node expr, int nnz, int * wrt, double * values);
 int _reverse_diff_variable(struct Node expr, int nnz, int * wrt, double * values);
 int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values);
-
-// When evaluating local derivatives, there's no difference between
-// forward and reverse.
-// These methods currently evaluate every node from scratch, which is
-// very inefficient.
-int (* REVERSE_DIFF_OP[N_OPERATORS])(struct Node *, int, double *) = {
-  _forward_diff_sum,
-  _forward_diff_product,
-  _forward_diff_subtraction,
-  _forward_diff_division,
-  _forward_diff_power,
-  _forward_diff_neg,
-  _forward_diff_sqrt,
-  _forward_diff_exp,
-  _forward_diff_log,
-  _forward_diff_sin,
-  _forward_diff_cos,
-  _forward_diff_tan,
-};
 
 struct CSRMatrix reverse_diff_expression(struct Node expr, int nvar){
   int nrow = 1;
@@ -109,7 +89,7 @@ int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values
   // This computes the local derivatives of the operator with respect to each
   // operand.
   double deriv_op[expr.data.expr->nargs];
-  REVERSE_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
+  DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
 
   // Update the adjoints for subexpressions
   for (int i=0; i<expr.data.expr->nargs; i++){
