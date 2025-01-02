@@ -51,7 +51,7 @@ struct CSRMatrix reverse_diff_expression(struct Node expr, int nvar){
   // We'll use an array of int to indicate the indices of variables
   // that appear in this constraint.
   int * wrt = malloc(sizeof(int) * nnz);
-  double * deriv_values = malloc(sizeof(int) * nnz);
+  double * deriv_values = malloc(sizeof(double) * nnz);
   struct VarListNode * tmp = varlist;
   for (int i=0; i<nnz; i++){
     wrt[i] = tmp->variable->index;
@@ -81,8 +81,6 @@ struct CSRMatrix reverse_diff_expression(struct Node expr, int nvar){
   return deriv_matrix;
 }
 
-// Do I need to pass in the parent expression's adjoint? This should be stored
-// on the expression, so passing it in seems redundant.
 int reverse_diff(struct Node expr, int nnz, int * wrt, double * values){
   switch(expr.type){
     case CONST_NODE:
@@ -109,7 +107,7 @@ int _reverse_diff_variable(struct Node expr, int nnz, int * wrt, double * values
 }
 
 int _reverse_diff_operator(struct Node expr, int nnz, int * wrt, double * values){
-  // This computes the local derivatives of the operators with respect to each
+  // This computes the local derivatives of the operator with respect to each
   // operand.
   double * deriv_op = malloc(sizeof(double) * expr.data.expr->nargs);
   REVERSE_DIFF_OP[expr.data.expr->op](expr.data.expr->args, expr.data.expr->nargs, deriv_op);
